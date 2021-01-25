@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shareddiary.mapper.DiaryMapper">
+
+
+    <select id="getDiary" resultType="com.shareddiary.dto.DiaryDto">
+        SELECT *
+        FROM   DIARY
+            INNER JOIN USER
+                    ON USER.user_id = DIARY.writer_id
+            INNER JOIN ROOMINFO
+                    ON DIARY.room_id = ROOMINFO.room_id
+        WHERE  DIARY.diary_id = #{diaryId}
+            AND DIARY.use_yn = 'y'
+    </select>
+
+    <select id="getPageNum" resultType="int">
+        SELECT COUNT(*)
+        FROM   DIARY
+        WHERE  DIARY.use_yn = 'y'
+               AND room_id IN (SELECT room_id
+                               FROM   ROOMUSER
+                               WHERE  user_id = #{userId}
+                                      AND use_yn = 'y')
+    </select>
+
+    <select id="getDiaryList" resultType="com.shareddiary.dto.DiaryDto">
+        SELECT *
+        FROM   DIARY
+               INNER JOIN USER
+                       ON USER.user_id = DIARY.writer_id
+        WHERE  room_id = #{roomId}
+               AND DIARY.use_yn = 'y'
+        ORDER  BY DIARY.create_time DESC;
+    </select>
+
+    <select id="getDiaryByPage" resultType="com.shareddiary.dto.DiaryDto">
+        SELECT *
+        FROM   diary
+               INNER JOIN user
+                       ON user.user_id = diary.writer_id
+               INNER JOIN ROOMINFO
+                       ON diary.room_id = roominfo.room_id
+        WHERE  diary.use_yn = 'y'
+               AND diary.room_id IN(SELECT room_id
+                                    FROM   ROOMUSER
+                                    WHERE  user_id =#{userId}
+                                           AND use_yn = 'y')
+        ORDER  BY diary.create_time DESC
+        LIMIT  #{firstDiary}, 6;
+    </select>
+
+    <insert id="addDiary">
+        INSERT INTO DIARY (room_id,
+            writer_id,
+            title,
+            feeling,
+            context,
+            img ,
+            use_yn,
+            creator,
+            create_time,
+            modifier,
+            modify_time,
+            date)
+        values (#{diaryDto.roomId},
+        #{diary.writerId},
+        #{diary.title},
+        #{diary.feeling},
+        #{diary.context},
+        #{diary.imgaddr},
+        'y',
+        #{diary.writerId},
+        NOW(),
+        #{diary.writerId},
+        NOW(),
+        #{diary.date})
+    </insert>
+
+    <update id="deleteDiary">
+        UPDATE DIARY SET use_yn = 'n', modifier = #{userId}, modify_time=NOW()
+        WHERE diary_id = #{diary.diaryId}
+    </update>
+
+    <update id="updateDiary">
+        UPDATE DIARY
+        SET title=#{diary.title}, feeling=#{diary.feeling}, context=#{diary.context}, img=#{diary.imgaddr}, modifier = #{diary.writerId}, modify_time=NOW()
+        WHERE diary_id = #{diary.diaryId}
+    </update>
+
+    <update id="deleteDiaryList">
+        UPDATE DIARY
+        SET use_yn='n',modifier =#{userId}, modify_time=NOW()
+        WHERE room_id = #{roomId}
+    </update>
+
+    <select id="getLikeDiaryList"  resultType="com.shareddiary.dto.DiaryDto">
+        SELECT *
+        FROM   ROOMINFO
+               JOIN (SELECT *
+                     FROM   USER
+                            JOIN (SELECT diary.diary_id,
+                                         diary.room_id,
+                                         diary.writer_id,
+                                         diary.title,
+                                         diary.feeling,
+                                         diary.img,
+                                         diary.context,
+                                         diary.date
+                                  FROM   diary
+                                         JOIN (SELECT *
+                                               FROM   it1452.like
+                                               WHERE  user_id = #{userId}
+                                                      AND use_yn = 'y') AS b
+                                           ON diary.diary_id = b.diary_id
+                                  WHERE  diary.use_yn = 'y') AS C
+                              ON C.writer_id = USER.user_id) AS D
+                 ON D.room_id = roominfo.room_id
+        ORDER  BY date DESC
+    </select>
+
+</mapper>

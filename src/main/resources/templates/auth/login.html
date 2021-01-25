@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<th:block th:replace="layout/config :: configFragment" ></th:block>
+<link rel="stylesheet" href="/assets/css/login.css">
+
+</head>
+<body>
+
+<!-- <script th:inline="javascript">
+    var error= /*[[ ${param.error} ]]*/ "";
+    if (error !=""){
+    	alert("오류");
+    }
+</script> -->
+
+
+
+ <form action="/login" th:action="@{/login}" method="POST">
+    <div class="login-container">
+        <img src="/assets/image/Logo.png">
+
+        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                            비밀번호 또는 아이디가 틀렸습니다.
+        </div>
+        <div class="login_form">
+
+            <div>
+
+                <input style="margin-top : 25px;" class="input" id="roomId" name="username" type="text" placeholder="아이디">
+            </div>
+            <div>
+
+                <input class="input" name="password" id="roomPw" type="password" placeholder="비밀번호">
+
+            </div>
+
+            <div>
+
+                <input style="margin-top:15px" type="button" class="btn" onclick="location.href='/join'" value="Sign up">
+            </div>
+            <div>
+                <input type="submit" class="btn" id="login_button" value="Login">
+
+            </div>
+        </div>
+
+
+    </div>
+</form>
+
+</body>
+</html>

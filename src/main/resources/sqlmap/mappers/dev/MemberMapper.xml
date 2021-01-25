@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shareddiary.mapper.MemberMapper">
+
+    <resultMap id="userMap" type="com.shareddiary.dto.MemberDto">
+
+     <result property="user_id" column="user_id"/>
+     <result property="user_pw" column="user_pw"/>
+     <result property="user_name" column="user_name"/>
+     <result property="user_gender" column="user_gender"/>
+     <result property="user_birth" column="user_birth"/>
+     <result property="user_email" column="user_email"/>
+
+    </resultMap>
+
+    <insert id="addMember">
+
+        insert into USER
+        values(#{member.user_id},#{member.user_pw},#{member.user_name},#{member.user_birth},#{member.user_gender},#{member.user_email},true,#{member.user_id},NOW(),#{member.user_id},NOW(),'user')
+
+    </insert>
+
+
+
+    <select id="getUser" resultType="com.shareddiary.dto.MemberDto">
+
+        select user_id, user_name, user_birth, user_gender, user_email
+        from USER
+        where user_id=#{user_id} and use_yn=true
+
+    </select>
+
+
+    <select id="getMemberList" resultType="com.shareddiary.dto.MemberDto">
+
+        select *
+        from USER
+        where USER.use_yn=true AND user_id in(select user_id from ROOMUSER where room_id=#{room_id} AND ROOMUSER.use_yn='y'
+
+    </select>
+
+    <update id="updateMember">
+
+        UPDATE USER
+        SET user_name=#{user_name} ,user_birth=#{user_birth},user_gender=#{user_gender},user_email=#{user_email} ,modifier=#{user_id},modify_time=NOW()
+        where user_id=#{user_id}
+
+    </update>
+
+</mapper>

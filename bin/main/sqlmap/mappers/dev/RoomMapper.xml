@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shareddiary.mapper.RoomMapper">
+
+    <select id="getRoomList" resultType="com.shareddiary.dto.RoomDto">
+      SELECT *
+      FROM   ROOMINFO
+      WHERE  use_yn = 'y'
+             AND room_id IN (SELECT room_id
+                             FROM   ROOMUSER
+                             WHERE  user_id = #{userId}
+                                    AND use_yn = 'y')
+    </select>
+
+    <select id="getRoom" resultType="com.shareddiary.dto.RoomDto">
+      SELECT *
+      FROM   ROOMINFO
+      WHERE  ROOM_ID = #{roomId}
+             AND USE_YN = 'y'
+    </select>
+
+    <select id="getLastId" resultType="Integer">
+      SELECT MAX(ROOM_ID) FROM ROOMINFO
+    </select>
+
+    <insert id="addRoom">
+        INSERT INTO ROOMINFO
+                   (room_id,
+                    room_name,
+                    room_img,
+                    use_yn,
+                    creator,
+                    create_time,
+                    modifier,
+                    modify_time,
+                    master_id)
+        VALUES  (#{room.roomId}, #{room.roomName}, #{room.roomImg}, 'y', #{userId}, NOW(), #{userId}, NOW(), #{userId})
+
+    </insert>
+
+    <update id="updateRoom">
+        UPDATE ROOMINFO
+        SET ROOM_NAME=#{room.roomName}, ROOM_IMG=#{room.roomImg}, MODIFIER=#{userId}, MODIFY_TIME=NOW()
+        WHERE ROOM_ID=#{room.roomId}
+
+    </update>
+
+    <insert id="addRoomUser">
+
+        INSERT INTO ROOMUSER
+        VALUES
+
+            (
+                #{room.roomId}
+                ,#{userId}
+                ,'y'
+                ,#{userId}
+                ,NOW()
+                ,#{userId}
+                ,NOW()
+            )
+        <foreach collection="userList" item="user" separator=",">
+            (
+                #{room.roomId}
+                ,#{user}
+                ,'y'
+                ,#{userId}
+                ,NOW()
+                ,#{userId}
+                ,NOW()
+            )
+        </foreach>
+    </insert>
+
+    <insert id="addUserList">
+        INSERT INTO ROOMUSER
+        VALUES
+        <foreach collection="userList" item="user" separator=",">
+            (
+                #{room.roomId}
+                ,#{user}
+                ,'y'
+                ,#{userId}
+                ,NOW()
+                ,#{userId}
+                ,NOW()
+            )
+        </foreach>
+    </insert>
+
+    <select id="checkUserInRoom" resultType="String">
+        SELECT USER_ID FROM ROOMUSER WHERE ROOM_ID=#{roomId} AND USER_ID=#{userId} AND USER_YN='y'
+    </select>
+
+    <select id="checkUserExistsRoom" resultType="String">
+        SELECT USER_ID FROM ROOMUSER WHERE ROOM_ID=#{roomId} AND USER_ID=#{userId}
+    </select>
+
+    <insert id="reAddRoomUser">
+        UPDATE ROOMUSER SET use_yn='y', modifier=#{userId}, modify_time=NOW() where room_id=#{room.roomId} and user_id=#{friend}
+    </insert>
+
+    <update id="removeRoomUser">
+        UPDATE ROOMUSER
+        SET use_yn='n', modifier=#{userId}, modify_time=NOW()
+        where room_id=#{roomId}
+    </update>
+
+    <update id="deleteRoom">
+        UPDATE ROOMINFO
+        SET use_yn='n', modifier=#{userId}, modify_time=NOW()
+        WHERE room_id=#{roomId}
+    </update>
+
+    <update id="deleteRoomUser">
+        UPDATE ROOMUSER
+        SET use_yn='n', modifier=#{userId}, modify_time=NOW()
+        WHERE room_id=#{roomId} and user_id=#{userId}
+    </update>
+
+    <update id="updateMaster">
+        UPDATE ROOMINFO
+        SET    master_id=
+               (
+                      SELECT user_id
+                      FROM   ROOMUSER
+                      WHERE  room_id= #{roomId}
+                      AND    user_id <![CDATA[ < > ]]>  #{userId}
+                      AND    create_time=
+                             (
+                                      SELECT   MIN(create_time)
+                                      FROM     ROOMUSER
+                                      WHERE    use_yn='y'
+                                      AND      user_id <![CDATA[ < >]]> #{userId}
+                                      GROUP BY room_id
+                                      HAVING   room_id=#{roomId})
+                      AND    use_yn='y' limit 1),
+               modify_time=now(),
+               modifier=#{userId}
+        WHERE  room_id=?
+    </update>
+
+    <select id="getCountOfParti" resultType="int">
+        SELECT COUNT(*)
+        FROM   ROOMUSER
+        WHERE  room_id = #{roomId}
+               AND use_yn = 'y'
+    </select>
+
+
+</mapper>
